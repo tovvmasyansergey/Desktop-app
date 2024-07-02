@@ -1,0 +1,109 @@
+import os
+import requests
+import xlsxwriter
+import tkinter
+from tkinter import filedialog
+
+def open_file():
+    """
+    Function: open_file
+    Brief: you choose file and get names of crypto
+    Params:None
+    Return:list of name from file
+        """
+    get_name = []
+    def get_tkinter():
+        """
+        Function: get_tkinter
+        Brief: you choose file and get names of crypto
+        Params:None
+        Return:None
+        """
+        file_path = filedialog.askopenfilename()
+        if file_path:
+            with open(file_path,encoding = 'utf - 8') as file:
+                content = file.readlines()
+                for i in content:
+                    get_name.append(i.strip())
+        else:
+            get_name.append("Bitcoin")
+        root.destroy()
+    root = tkinter.Tk()
+    root.title("File Opener")
+    root.geometry("300x250")
+    open_button = tkinter.Button(root, text="find File", command=get_tkinter)
+    open_button.pack()
+    root.mainloop()
+    return get_name
+def get_crypto_data():
+    """
+    Function: get_crypto_data
+    Brief: The function request url and get all data about crypto
+    Params:
+    Return: returns the list of crypto data
+    """
+    url = "https://api.coingecko.com/api/v3/coins/markets"
+    params = {"vs_currency": "usd","price_change_percentage":"24h"}
+    response = requests.get(url, params=params)
+    data = response.json()
+    return data
+def get_data_by_name(cnt,content):
+    """
+    Function: get_data_by_name
+    Brief: The functions is search crypto by name and get info about crypto
+    Params: cnt`name of crpto,content`data of crypto
+    Return: return list of crypto by name
+    """
+    data = []
+    for line in cnt:
+        for i in range(37):
+            if line.lower() == content[i]['name'].lower():
+                data.append({
+                'name': content[i]['name'],
+                'symbol': content[i]['symbol'],
+                'current_price': content[i]['current_price'],
+                'market_cap': content[i]['market_cap'],
+                'total_volume': content[i]['total_volume'],
+                'price_change_24h': content[i]['price_change_24h']
+            })
+    return data
+def write_in_xlsx(cnt):
+    """
+    Function: write_in_xlsx
+    Brief: The functions is open window user input xlsx name and all data by name input in xlsx file
+    Params: cnt`data of crptto by name
+    Return: none
+    """
+    root = tkinter.Tk()
+    root.withdraw()
+    file_path = filedialog.asksaveasfilename(defaultextension=".xlsx")
+    if not file_path:
+        downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
+        file_path = os.path.join(downloads_folder, "default_filename.xlsx")
+    workbook = xlsxwriter.Workbook(file_path)
+    worksheet = workbook.add_worksheet("Sheet")
+    top_name = []
+    for i in cnt[0]:
+        top_name.append(i)
+    row,col = 0,0
+    for i in top_name:
+        worksheet.write(row,col,i)
+        col += 1
+    row = 1
+    for crypto in cnt:
+        col = 0
+        for i in crypto.values():
+            worksheet.write(row,col,i)
+            col += 1
+        row += 1
+    workbook.close()
+def main():
+    """
+    Function: main
+    """
+    get_name = open_file()
+    data = get_crypto_data()
+    data_by_name = get_data_by_name(get_name,data)
+    write_in_xlsx(data_by_name)
+if __name__ == "__main__":
+    main()

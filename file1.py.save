@@ -1,0 +1,16 @@
+import tkinter as tk
+from tkinter import filedialog
+import os
+
+def save_file():
+    root = tk.Tk()
+    root.withdraw()
+    file_path = filedialog.asksaveasfilename(defaultextension=".txt", 
+                                             filetypes=[("Text files", "*.txt"), ("All files", "*.*")])
+    if not file_path:  # Если пользователь отменил диалог
+        downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
+        file_path = os.path.join(downloads_folder, "default_filename.txt")
+    with open(file_path, 'w') as file:
+        file.write("Пример текста для сохранения в файл")
+    print(f"Файл сохранён по пути: {file_path}")
+save_file()
